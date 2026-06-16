@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pendulum Bench — Measuring g in Daegu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0c111c;          /* deep panel */
+    --panel:#141b2b;        /* card */
+    --panel-2:#1b2438;      /* raised */
+    --line:#2a364f;         /* grid / borders */
+    --text:#e9edf6;
+    --muted:#8c97b3;
+    --dim:#5d6b86;
+    --blue:#5b8def;         /* UI accent */
+    --yellow:#f5c542;       /* cable-tie signal */
+    --green:#4fc079;
+    --red:#e5564b;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'IBM Plex Sans',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--ink);color:var(--text);font-family:var(--body);
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(rgba(91,141,239,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(91,141,239,.045) 1px,transparent 1px);
+    background-size:32px 32px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- header ---------- */
+  header{padding:64px 0 30px;border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--blue);margin:0 0 14px;}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(2rem,5vw,3.3rem);line-height:1.04;margin:0 0 12px;letter-spacing:-.01em;}
+  h1 .swing{color:var(--yellow);}
+  .lede{color:var(--muted);font-size:1.05rem;max-width:60ch;margin:0;}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;}
+  .chip{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:7px 14px;color:var(--text);}
+  .chip b{color:var(--green);font-weight:600;}
+
+  /* ---------- section ---------- */
+  section{padding:54px 0;border-bottom:1px solid var(--line);}
+  .sec-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
+  .sec-tag{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);}
+  h2{font-family:var(--display);font-weight:600;font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0;letter-spacing:-.01em;}
+  .sec-note{color:var(--muted);max-width:64ch;margin:10px 0 30px;}
+
+  /* ---------- demo grid ---------- */
+  .demos{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media(max-width:760px){.demos{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;}
+  .card-top{padding:18px 20px 8px;}
+  .card-kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;}
+  .k-clean{color:var(--green);}
+  .k-hook{color:var(--red);}
+  .card h3{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:6px 0 4px;}
+  .card p.sub{color:var(--muted);font-size:.9rem;margin:0;}
+  canvas{display:block;width:100%;background:
+      radial-gradient(120% 80% at 50% 0%,rgba(91,141,239,.06),transparent 60%);
+  }
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line);}
+  .ro{background:var(--panel-2);padding:11px 14px;}
+  .ro .lab{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .ro .val{font-family:var(--mono);font-size:1.02rem;font-weight:500;margin-top:3px;}
+  .val.live{color:var(--yellow);}
+  .controls{display:flex;gap:10px;align-items:center;padding:14px 16px;background:var(--panel-2);border-top:1px solid var(--line);flex-wrap:wrap;}
+  button{font-family:var(--mono);font-size:.82rem;cursor:pointer;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel);color:var(--text);padding:8px 14px;transition:border-color .15s,background .15s;}
+  button:hover{border-color:var(--blue);}
+  button:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+  button.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  button.primary:hover{filter:brightness(1.08);}
+  .speed{margin-left:auto;display:flex;gap:4px;align-items:center;}
+  .speed span{font-family:var(--mono);font-size:.66rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-right:4px;}
+  .speed button{padding:6px 9px;font-size:.74rem;}
+  .speed button.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  /* ---------- adjustable ---------- */
+  .lab-grid{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start;}
+  @media(max-width:760px){.lab-grid{grid-template-columns:1fr;}}
+  .panel-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .field label .cur{color:var(--text);}
+  input[type=range]{width:100%;accent-color:var(--blue);height:4px;}
+  input[type=number]{width:100%;font-family:var(--mono);font-size:.95rem;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text);border-radius:8px;padding:9px 11px;}
+  input[type=number]:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
+  .result{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .g-hero{padding:26px 24px;border-bottom:1px solid var(--line);background:
+     radial-gradient(120% 120% at 100% 0%,rgba(79,192,121,.12),transparent 55%);}
+  .g-hero .lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .g-hero .g-val{font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,7vw,3.6rem);line-height:1;margin:6px 0 0;}
+  .g-hero .g-val span{font-size:1.1rem;color:var(--muted);font-weight:500;font-family:var(--mono);}
+  .g-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);}
+  .g-meta .ro{background:var(--panel-2);}
+  .lab-canvas-wrap{padding:0;}
+  .formula{font-family:var(--mono);font-size:.82rem;color:var(--muted);padding:13px 16px;border-top:1px solid var(--line);background:var(--panel-2);}
+  .formula b{color:var(--yellow);font-weight:500;}
+
+  /* ---------- footer ---------- */
+  footer{padding:40px 0 70px;color:var(--muted);font-size:.9rem;}
+  footer .team{font-family:var(--mono);font-size:.82rem;color:var(--text);margin-top:6px;}
+  footer a{color:var(--blue);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Physics 1 · Group Project</p>
+    <h1>The Pendulum <span class="swing">Bench</span></h1>
+    <p class="lede">Two pendulums run side by side — a clean swing and one with a hooked knot that drifts into a faint double pendulum. Then measure <em>g</em> yourself from a length and a stopwatch time, the same way we did in the lab.</p>
+    <div class="chips">
+      <span class="chip">Site of measurement · <b>Daegu, KR</b></span>
+      <span class="chip">Local gravity · <b>9.797 m/s²</b></span>
+      <span class="chip">Reference · Nelson &amp; Olsson 1986</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ SECTION 1: TWO DEMOS ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">Watch</span>
+      <h2>Two pendulums, twenty swings</h2>
+    </div>
+    <p class="sec-note">Each pendulum leaves a fading trace, like a slow oscilloscope. The clean pendulum traces one sharp arc. The hooked-knot pendulum traces almost the same arc — but watch the bob: the little hook at the top adds a second hinge, so the path smears slightly and never quite repeats. Both stop after 20 full oscillations. The measured period sits a touch above the ideal <em>T₀ = 2π√(l/g)</em> on purpose: a 22° release is past the small-angle limit, so the finite-amplitude correction lengthens it by ~0.6%.</p>
+
+    <div class="demos">
+      <!-- CLEAN -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-kicker k-clean">Clean swing · simple pendulum</div>
+          <h3>One pivot, one arc</h3>
+          <p class="sub">A 200 g steel ball on an 85 cm thread.</p>
+        </div>
+        <canvas id="cv-simple" height="380"></canvas>
+        <div class="readout">
+          <div class="ro"><div class="lab">Length l</div><div class="val">0.850 m</div></div>
+          <div class="ro"><div class="lab">Mass m</div><div class="val">0.200 kg</div></div>
+          <div class="ro"><div class="lab">Release θ₀</div><div class="val">22°</div></div>
+          <div class="ro"><div class="lab">Gravity g</div><div class="val">9.797 m/s²</div></div>
+          <div class="ro"><div class="lab">Elapsed</div><div class="val live" id="s-time">0.00 s</div></div>
+          <div class="ro"><div class="lab">Oscillations</div><div class="val live" id="s-count">0 / 20</div></div>
+          <div class="ro"><div class="lab">Period (measured)</div><div class="val live" id="s-period">— s</div></div>
+          <div class="ro"><div class="lab">Ideal T₀ = 2π√(l/g)</div><div class="val" id="s-idealT0">— s</div></div>
+        </div>
+        <div class="controls">
+          <button class="primary" id="s-run">Replay</button>
+          <div class="speed">
+            <span>Speed</span>
+            <button data-speed="0.5">½×</button>
+            <button data-speed="1">1×</button>
+            <button data-speed="2" class="on">2×</button>
+            <button data-speed="4">4×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOOKED -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-kicker k-hook">Hooked knot · double pendulum</div>
+          <h3>A second hinge appears</h3>
+          <p class="sub">Same ball, but a 5 cm hooked knot at the top.</p>
+        </div>
+        <canvas id="cv-double" height="380"></canvas>
+        <div class="readout">
+          <div class="ro"><div class="lab">Wire l₂</div><div class="val">0.800 m</div></div>
+          <div class="ro"><div class="lab">Hook l₁</div><div class="val">0.050 m</div></div>
+          <div class="ro"><div class="lab">Ball m₂</div><div class="val">0.200 kg</div></div>
+          <div class="ro"><div class="lab">Knot m₁</div><div class="val">0.020 kg</div></div>
+          <div class="ro"><div class="lab">Elapsed</div><div class="val live" id="d-time">0.00 s</div></div>
+          <div class="ro"><div class="lab">Oscillations</div><div class="val live" id="d-count">0 / 20</div></div>
+          <div class="ro"><div class="lab">Period (measured)</div><div class="val live" id="d-period">— s</div></div>
+          <div class="ro"><div class="lab">Angle now</div><div class="val live" id="d-angle">0.0°</div></div>
+        </div>
+        <div class="controls">
+          <button class="primary" id="d-run">Replay</button>
+          <div class="speed">
+            <span>Speed</span>
+            <button data-speed="0.5">½×</button>
+            <button data-speed="1">1×</button>
+            <button data-speed="2" class="on">2×</button>
+            <button data-speed="4">4×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: ADJUSTABLE ============ -->
+<section style="border-bottom:none;">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">Measure</span>
+      <h2>Work out g from a stopwatch</h2>
+    </div>
+    <p class="sec-note">Type in a wire length, how many swings you counted, and the total time on the stopwatch. The bench works backwards to the gravity those numbers imply — exactly the calculation behind our experiment. Mass is along for the ride: it changes the ball, not the result.</p>
+
+    <div class="lab-grid">
+      <div class="panel-box">
+        <div class="field">
+          <label>Ball weight <span class="cur" id="lab-mass-cur">200 g</span></label>
+          <input type="range" id="lab-mass" min="20" max="500" step="5" value="200" />
+        </div>
+        <div class="field">
+          <label for="lab-len">Wire length (cm)</label>
+          <input type="number" id="lab-len" min="5" max="300" step="0.1" value="85" />
+        </div>
+        <div class="field">
+          <label for="lab-n">Total oscillations counted</label>
+          <input type="number" id="lab-n" min="1" max="500" step="1" value="20" />
+        </div>
+        <div class="field">
+          <label for="lab-t">Total time for those swings (s)</label>
+          <input type="number" id="lab-t" min="0.1" max="9999" step="0.01" value="37.00" />
+        </div>
+      </div>
+
+      <div class="result">
+        <div class="g-hero">
+          <div class="lab">Calculated gravity</div>
+          <div class="g-val" id="lab-g">9.804 <span>m/s²</span></div>
+        </div>
+        <div class="g-meta">
+          <div class="ro"><div class="lab">Period T</div><div class="val" id="lab-period">1.850 s</div></div>
+          <div class="ro"><div class="lab">vs Daegu 9.797</div><div class="val" id="lab-err">+0.07 %</div></div>
+          <div class="ro"><div class="lab">Length</div><div class="val" id="lab-lenval">0.850 m</div></div>
+        </div>
+        <div class="lab-canvas-wrap">
+          <canvas id="cv-lab" height="300"></canvas>
+        </div>
+        <div class="formula">g = 4π² · l · N² / t²  →  <b id="lab-formula">4π² × 0.850 × 20² / 37.00²</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Built to illustrate our pendulum project. The first two pendulums run at Daegu gravity; the calculator inverts the same formula we used on our stopwatch data.
+    <div class="team">Munkh-Iveel · Zevarniso · Bolor · Munkhtemuulen</div>
+    <div style="margin-top:10px;">Source &amp; report · <a href="#" id="repo-link">add your GitHub link here</a></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ===================================================================
+   PHYSICS REFERENCE — every formula used in this file
+   -------------------------------------------------------------------
+   Local gravity (Daegu, KR):      g = 9.797 m/s^2
+
+   (1) Simple pendulum, exact equation of motion (any angle):
+         theta'' = -(g / L) * sin(theta)
+       Implemented in Demo.deriv() for type 'simple'.
+       (An optional linear air-damping term  - b*theta'  is included
+        but b = 0 by default, so the demo is the exact ideal pendulum.)
+
+   (2) Ideal small-angle period:   T0 = 2*pi*sqrt(L / g)
+       Shown as the "Ideal T0" readout. The simulated (measured)
+       period is slightly LARGER because the 22 deg release is beyond
+       the small-angle limit; the leading finite-amplitude correction
+       is  T = T0 * (1 + theta0^2/16 + ...).
+
+   (3) Double pendulum, exact equations of motion (standard form,
+       two point masses, angles from vertical):
+         d = theta1 - theta2
+         den = 2*m1 + m2 - m2*cos(2*theta1 - 2*theta2)
+         theta1'' = [ -g(2m1+m2)sin(theta1) - m2*g*sin(theta1-2*theta2)
+                      - 2 sin(d) m2 ( theta2'^2 L2 + theta1'^2 L1 cos(d) ) ]
+                    / ( L1 * den )
+         theta2'' = [ 2 sin(d) ( theta1'^2 L1 (m1+m2) + g(m1+m2)cos(theta1)
+                      + theta2'^2 L2 m2 cos(d) ) ]
+                    / ( L2 * den )
+       Implemented in Demo.deriv() for type 'double'. Verified by
+       energy conservation (drift < 1e-5 % with damping off).
+
+   (4) Gravity from a timed run (the calculator):
+         T = t / N            (period = total time / number of swings)
+         g = 4*pi^2 * L / T^2 = 4*pi^2 * L * N^2 / t^2
+       Implemented in labValues().
+
+   Integration: fixed-step classical Runge-Kutta 4 (integrate()).
+   =================================================================== */
+const G_DAEGU = 9.797;
+const DEG = Math.PI/180;
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- size a canvas ONCE (logical height is fixed, never read back) ---------- */
+function setupCanvas(cv, logicalH){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);   // cap dpr: cheaper, plenty sharp
+  const w = cv.clientWidth || cv.parentElement.clientWidth || 300;
+  cv.style.height = logicalH + 'px';
+  cv.width  = Math.round(w * dpr);
+  cv.height = Math.round(logicalH * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h: logicalH };
+}
+
+/* ---------- allocation-free RK4 (mutates state in place) ---------- */
+const K1=[0,0,0,0], K2=[0,0,0,0], K3=[0,0,0,0], K4=[0,0,0,0], TMP=[0,0,0,0];
+function integrate(s, n, dt, deriv){
+  deriv(s, K1);
+  for(let i=0;i<n;i++) TMP[i] = s[i] + 0.5*dt*K1[i];
+  deriv(TMP, K2);
+  for(let i=0;i<n;i++) TMP[i] = s[i] + 0.5*dt*K2[i];
+  deriv(TMP, K3);
+  for(let i=0;i<n;i++) TMP[i] = s[i] + dt*K3[i];
+  deriv(TMP, K4);
+  for(let i=0;i<n;i++) s[i] += (dt/6)*(K1[i] + 2*K2[i] + 2*K3[i] + K4[i]);
+}
+
+/* ===================================================================
+   DEMO PENDULUM  (simple or double)
+   =================================================================== */
+const LOGICAL_H = 380;
+class Demo {
+  constructor(cvId, type, p, els){
+    this.cv = document.getElementById(cvId);
+    this.type = type;                 // 'simple' | 'double'
+    this.n = type==='simple' ? 2 : 4;
+    this.p = p;
+    this.els = els;
+    this.speed = 2;
+    this.trace = [];
+    this.running = false;
+    this._deriv = (st,out)=>this.deriv(st,out);
+    const c = setupCanvas(this.cv, LOGICAL_H);
+    this.ctx = c.ctx; this.w = c.w; this.h = c.h;
+    this.reset();
+  }
+  resize(){
+    const c = setupCanvas(this.cv, LOGICAL_H);
+    this.ctx = c.ctx; this.w = c.w; this.h = c.h;
+    this.draw();
+  }
+  reset(){
+    this.t = 0; this.crossings = 0; this.osc = 0; this.prevSign = 0; this.done = false;
+    this.firstCrossT = null;                       // time of first pass through vertical
+    this.trace.length = 0;
+    this.s = this.type==='simple'
+      ? [this.p.theta0, 0]
+      : [this.p.theta0, 0, this.p.theta0, 0];
+    this.last = null;
+    // ideal small-angle period  T0 = 2*pi*sqrt(L/g)  (simple pendulum only)
+    if(this.type==='simple' && this.els.idealT0){
+      const T0 = 2*Math.PI*Math.sqrt(this.p.L / G_DAEGU);
+      this.els.idealT0.textContent = T0.toFixed(3)+' s';
+    }
+    this.updateReadout(this.type==='simple' ? this.s[0] : this.s[2]);
+    this.draw();
+  }
+  start(){
+    this.reset();
+    this.running = true;
+    this.last = null;
+    requestAnimationFrame(t=>this.loop(t));
+  }
+  setSpeed(v){ this.speed = v; }
+
+  deriv(st, out){
+    const g = G_DAEGU;
+    if(this.type==='simple'){
+      out[0] = st[1];
+      out[1] = -(g/this.p.L)*Math.sin(st[0]) - this.p.damp*st[1];
+    } else {
+      const t1=st[0], w1=st[1], t2=st[2], w2=st[3];
+      const {L1,L2,m1,m2,damp} = this.p;
+      const d = t1 - t2;
+      const den = (2*m1 + m2 - m2*Math.cos(2*t1 - 2*t2));
+      out[0] = w1;
+      out[1] = ( -g*(2*m1+m2)*Math.sin(t1)
+                 - m2*g*Math.sin(t1-2*t2)
+                 - 2*Math.sin(d)*m2*(w2*w2*L2 + w1*w1*L1*Math.cos(d)) )
+               / (L1*den) - damp*w1;
+      out[2] = w2;
+      out[3] = ( 2*Math.sin(d)*( w1*w1*L1*(m1+m2)
+                 + g*(m1+m2)*Math.cos(t1)
+                 + w2*w2*L2*m2*Math.cos(d) ) )
+               / (L2*den) - damp*w2;
+    }
+  }
+
+  step(simDt){
+    const h = 0.003;
+    let steps = Math.ceil(simDt / h);
+    if(steps > 80) steps = 80;                 // hard cap keeps frames cheap
+    const dt = simDt / steps;
+    for(let i=0;i<steps;i++) integrate(this.s, this.n, dt, this._deriv);
+
+    // Count full periods by zero-crossings of the main bob angle.
+    // A period elapses every 2 crossings; anchor at the FIRST crossing so
+    // the measured period has no quarter-period offset:
+    //   periods = floor((crossings - 1) / 2)
+    //   T_measured = (t - t_firstCrossing) / periods
+    const ang = this.type==='simple' ? this.s[0] : this.s[2];
+    const sign = ang >= 0 ? 1 : -1;
+    if(this.prevSign !== 0 && sign !== this.prevSign){
+      this.crossings++;
+      if(this.firstCrossT === null) this.firstCrossT = this.t;
+      this.osc = Math.floor((this.crossings - 1) / 2);
+      if(this.osc >= 20){ this.running = false; this.done = true; }
+    }
+    this.prevSign = sign;
+    this.updateReadout(ang);
+  }
+
+  updateReadout(ang){
+    if(this.els.time)  this.els.time.textContent  = this.t.toFixed(2)+' s';
+    if(this.els.count) this.els.count.textContent = this.done ? '20 / 20 \u2713' : Math.min(this.osc,20)+' / 20';
+    if(this.els.angle) this.els.angle.textContent = (ang/DEG).toFixed(1)+'\u00b0';
+    if(this.els.period){
+      const T = (this.osc>0 && this.firstCrossT!==null)
+        ? (this.t - this.firstCrossT)/this.osc : null;
+      this.els.period.textContent = T ? T.toFixed(3)+' s' : '\u2014 s';
+    }
+  }
+
+  geometry(){
+    const cx = this.w/2, pivotY = 34;
+    const scale = (this.h - pivotY - 28) / 0.92;
+    if(this.type==='simple'){
+      const th = this.s[0];
+      return { cx, pivotY,
+        ball:{ x: cx + this.p.L*scale*Math.sin(th), y: pivotY + this.p.L*scale*Math.cos(th) } };
+    } else {
+      const t1=this.s[0], t2=this.s[2];
+      const jx = cx + this.p.L1*scale*Math.sin(t1);
+      const jy = pivotY + this.p.L1*scale*Math.cos(t1);
+      return { cx, pivotY,
+        joint:{x:jx,y:jy},
+        ball:{ x: jx + this.p.L2*scale*Math.sin(t2), y: jy + this.p.L2*scale*Math.cos(t2) } };
+    }
+  }
+
+  draw(){
+    const ctx = this.ctx, w = this.w, h = this.h;
+    ctx.clearRect(0,0,w,h);
+    const G = this.geometry();
+    const color = this.type==='simple' ? '#4fc079' : '#e5564b';
+
+    // trail: record + draw as ONE stroke
+    this.trace.push(G.ball.x, G.ball.y);
+    if(this.trace.length > 320) this.trace.splice(0, this.trace.length-320); // ~160 points
+    if(this.trace.length >= 4){
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = this.type==='simple' ? 'rgba(79,192,121,.32)' : 'rgba(229,86,75,.32)';
+      ctx.beginPath();
+      ctx.moveTo(this.trace[0], this.trace[1]);
+      for(let i=2;i<this.trace.length;i+=2) ctx.lineTo(this.trace[i], this.trace[i+1]);
+      ctx.stroke();
+    }
+
+    // pivot mount
+    ctx.fillStyle = '#2a364f';
+    ctx.fillRect(G.cx-26, G.pivotY-10, 52, 8);
+    ctx.fillStyle = '#8c97b3';
+    ctx.beginPath(); ctx.arc(G.cx, G.pivotY, 4, 0, 7); ctx.fill();
+
+    // rods
+    if(this.type==='simple'){
+      ctx.strokeStyle='rgba(233,237,246,.55)'; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(G.cx,G.pivotY); ctx.lineTo(G.ball.x,G.ball.y); ctx.stroke();
+    } else {
+      ctx.strokeStyle='#f5c542'; ctx.lineWidth=3;             // the hook
+      ctx.beginPath(); ctx.moveTo(G.cx,G.pivotY); ctx.lineTo(G.joint.x,G.joint.y); ctx.stroke();
+      ctx.fillStyle='#f5c542'; ctx.beginPath(); ctx.arc(G.joint.x,G.joint.y,3.5,0,7); ctx.fill();
+      ctx.strokeStyle='rgba(233,237,246,.55)'; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(G.joint.x,G.joint.y); ctx.lineTo(G.ball.x,G.ball.y); ctx.stroke();
+    }
+
+    // bob
+    const r = 13;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(G.ball.x, G.ball.y, r, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.arc(G.ball.x-4, G.ball.y-4, 4, 0, 7); ctx.fill();
+  }
+
+  loop(ts){
+    if(this.last===null) this.last = ts;
+    let frameDt = (ts - this.last)/1000;
+    this.last = ts;
+    if(frameDt > 0.05) frameDt = 0.05;
+    if(this.running) this.step(frameDt * this.speed);
+    this.draw();
+    if(this.running) requestAnimationFrame(t=>this.loop(t));   // stop when finished
+  }
+}
+
+const simple = new Demo('cv-simple','simple',
+  {L:0.85, theta0:22*DEG, damp:0},                 // damp:0 => exact pendulum equation
+  {time:document.getElementById('s-time'), count:document.getElementById('s-count'),
+   period:document.getElementById('s-period'), idealT0:document.getElementById('s-idealT0')});
+
+const dbl = new Demo('cv-double','double',
+  {L1:0.05, L2:0.80, m1:0.020, m2:0.200, theta0:22*DEG, damp:0},  // damp:0 => exact double-pendulum EOM
+  {time:document.getElementById('d-time'), count:document.getElementById('d-count'),
+   period:document.getElementById('d-period'), angle:document.getElementById('d-angle')});
+
+document.getElementById('s-run').addEventListener('click',()=>simple.start());
+document.getElementById('d-run').addEventListener('click',()=>dbl.start());
+
+document.querySelectorAll('.card').forEach(card=>{
+  const cvId = card.querySelector('canvas').id;
+  const target = cvId==='cv-simple' ? simple : dbl;
+  card.querySelectorAll('.speed button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      card.querySelectorAll('.speed button').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      target.setSpeed(parseFloat(btn.dataset.speed));
+    });
+  });
+});
+
+/* ===================================================================
+   ADJUSTABLE PENDULUM (kinematic, driven at the measured period)
+   =================================================================== */
+const lab = {
+  cv: document.getElementById('cv-lab'),
+  mass: document.getElementById('lab-mass'),
+  len: document.getElementById('lab-len'),
+  n: document.getElementById('lab-n'),
+  t: document.getElementById('lab-t')
+};
+{
+  const c = setupCanvas(lab.cv, 300);
+  lab.ctx = c.ctx; lab.w = c.w; lab.h = c.h;
+}
+lab.t0 = performance.now();
+lab.calc = null;
+
+function labValues(){
+  const massG = parseFloat(lab.mass.value);
+  const Lcm  = parseFloat(lab.len.value);
+  const N    = parseFloat(lab.n.value);
+  const time = parseFloat(lab.t.value);
+  const L = (Lcm||0)/100;
+  let T=null, g=null;
+  if(N>0 && time>0){
+    T = time/N;                          // period = total time / number of swings
+    g = 4*Math.PI*Math.PI*L/(T*T);       // g = 4*pi^2 * L / T^2
+  }
+  return {massG, Lcm, N, time, L, T, g};
+}
+
+function updateLabReadout(){
+  const v = labValues();
+  lab.calc = v;
+  document.getElementById('lab-mass-cur').textContent = Math.round(v.massG)+' g';
+  document.getElementById('lab-lenval').textContent = (v.L||0).toFixed(3)+' m';
+  if(v.T && v.g && isFinite(v.g)){
+    document.getElementById('lab-g').innerHTML = v.g.toFixed(3)+' <span>m/s\u00b2</span>';
+    document.getElementById('lab-period').textContent = v.T.toFixed(3)+' s';
+    const err = (v.g - G_DAEGU)/G_DAEGU*100;
+    document.getElementById('lab-err').textContent = (err>=0?'+':'')+err.toFixed(2)+' %';
+    document.getElementById('lab-formula').textContent =
+      '4\u03c0\u00b2 \u00d7 '+v.L.toFixed(3)+' \u00d7 '+v.N+'\u00b2 / '+v.time.toFixed(2)+'\u00b2';
+  } else {
+    document.getElementById('lab-g').innerHTML = '\u2014  <span>m/s\u00b2</span>';
+    document.getElementById('lab-period').textContent = '\u2014 s';
+    document.getElementById('lab-err').textContent = '\u2014';
+    document.getElementById('lab-formula').textContent = 'enter swings and time';
+  }
+}
+
+function drawLab(ts){
+  const v = lab.calc || labValues();
+  const ctx = lab.ctx, w = lab.w, h = lab.h;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, pivotY=28;
+  const maxLen = h - pivotY - 30;
+  const scale = maxLen / 2.0;
+  const Lpx = Math.min((v.L||0)*scale, maxLen);
+  const theta0 = 20*DEG;
+  let th;
+  if(v.T && v.T>0 && !prefersReduced){
+    const tsec = (ts - lab.t0)/1000;
+    th = theta0*Math.cos(2*Math.PI*tsec/v.T);
+  } else {
+    th = theta0*0.6;
+  }
+  const bx = cx + Lpx*Math.sin(th);
+  const by = pivotY + Lpx*Math.cos(th);
+
+  ctx.fillStyle='#2a364f'; ctx.fillRect(cx-24,pivotY-9,48,7);
+  ctx.strokeStyle='rgba(233,237,246,.5)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(cx,pivotY); ctx.lineTo(bx,by); ctx.stroke();
+
+  const r = 9 * Math.cbrt((v.massG||200)/200) + 4;
+  ctx.fillStyle='#5b8def';
+  ctx.beginPath(); ctx.arc(bx,by,r,0,7); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.4)';
+  ctx.beginPath(); ctx.arc(bx-r*0.3,by-r*0.3,r*0.28,0,7); ctx.fill();
+
+  requestAnimationFrame(drawLab);
+}
+
+[lab.mass, lab.len, lab.n, lab.t].forEach(el=>{
+  el.addEventListener('input', ()=>{ lab.t0 = performance.now(); updateLabReadout(); });
+});
+updateLabReadout();
+requestAnimationFrame(drawLab);
+
+/* ---------- resize: re-size canvases once per resize, not per frame ---------- */
+let rezTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(rezTimer);
+  rezTimer = setTimeout(()=>{
+    simple.resize();
+    dbl.resize();
+    const c = setupCanvas(lab.cv, 300);
+    lab.ctx = c.ctx; lab.w = c.w; lab.h = c.h;
+  }, 150);
+});
+
+/* ---------- autostart demos (skip if user prefers reduced motion) ---------- */
+if(!prefersReduced){ simple.start(); dbl.start(); }
+
+document.getElementById('repo-link').addEventListener('click',e=>{
+  e.preventDefault();
+  alert('Replace the href of this link in index.html with your GitHub repository URL.');
+});
+
+</script>
+</body>
+</html>
