@@ -8,20 +8,6 @@ Daegu, South Korea (accepted local *g* ≈ 9.797 m/s²).
 > **Status:** Data collected; analysis in progress. See `docs/` for the pre-lab and the
 > raw data sheet.
 
-## Live demo
-
-An interactive visualization lives at the repository root (`index.html`) and is published
-with GitHub Pages:
-
-**https://<your-username>.github.io/<repo-name>/**
-
-It shows two pendulums running 20 oscillations at Daegu gravity — a clean simple pendulum and
-one with a hooked knot that drifts into a faint double pendulum — plus a calculator that solves
-`g = 4π²·l·N²/t²` from a length and a stopwatch time. All physics formulas are documented at
-the top of the `<script>` block in `index.html`.
-
----
-
 ## Team Members
 
 - **Munkh-Iveel**
