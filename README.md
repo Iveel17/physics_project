@@ -33,7 +33,7 @@ Daegu, South Korea (accepted local *g* ≈ 9.797 m/s²).
 
 ---
 
-## Research Inspiration
+## Research Paper
 
 The project is inspired by **R. A. Nelson & M. G. Olsson, "The pendulum — Rich physics from
 a simple system," *American Journal of Physics* 54(2), 112–121 (1986).** That paper measures
@@ -48,22 +48,18 @@ scale: a shorter pendulum, a stopwatch instead of a cathetometer, 20 oscillation
 ## Methodology
 
 ### Materials
-- Steel ball, diameter 27 mm (radius *a* = 13.5 mm), mass *m* = 200.0 ± 0.1 g
-- Thin thread/wire, length ≈ 85 cm (and a shorter length for the refined run)
+- Steel ball, diameter 27 mm (radius *a* = 13.5 mm), mass *m* = 100.0 ± 0.1 g
+- Thin thread/wire, length ≈ 78.8 cm
 - Small balancing weights for the stand/ring
 - Foam board used as a release/guide surface
 - Wood piece inserted at the knot to suppress double-pendulum motion
 
 ### Equipment
 - Digital calipers (ball diameter)
-- Laboratory scale (ball mass, cord mass)
+- Laboratory scale
 - Ruler / measuring tape, resolution ≤ 1 mm (effective length)
-- Angle-measuring device (verified release plane to ≈ 89.7°, i.e. ~0.3° from vertical)
+- Angle-measuring device (verified release plane around 89.7°, i.e. ~0.3° from vertical)
 - Smartphone stopwatch and camera
-
-### Software
-- Spreadsheet (period averaging, standard deviation, error propagation)
-- Plotting tool for period-vs-angle and *g* comparison
 
 ### Experimental procedure
 1. Measure ball diameter (3×) and mass; measure cord mass.
@@ -120,8 +116,6 @@ scale: a shorter pendulum, a stopwatch instead of a cathetometer, 20 oscillation
 
 1. R. A. Nelson and M. G. Olsson, "The pendulum — Rich physics from a simple system,"
    *Am. J. Phys.* **54**(2), 112–121 (1986).
-2. Course lab/pre-lab handout: *Measurement of Gravitational Acceleration Using a Simple
-   Pendulum* (Physics 1, 2026).
 
 ---
 
