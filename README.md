@@ -112,22 +112,6 @@ scale: a shorter pendulum, a stopwatch instead of a cathetometer, 20 oscillation
 
 ---
 
-## Repository Structure
-
-```
-project/
-├── index.html       # Interactive pendulum demo + g calculator (served by GitHub Pages)
-├── data/            # Raw timing data (CSV/spreadsheet), period calculations
-├── images/          # Photos of the apparatus, angle device, setup iterations
-├── videos/          # Experiment clips (oscillation counting, before/after fixes)
-├── src/             # Analysis scripts / spreadsheet for period + g + error propagation
-├── docs/            # Pre-lab report, scanned data sheet, reference paper notes
-├── report/          # LaTeX source (.tex) and compiled PDF report
-└── README.md
-```
-
----
-
 ## How To Reproduce
 
 1. **Build the pendulum.** Tie a thin thread to a rigid pivot. Attach the steel ball. Insert a
